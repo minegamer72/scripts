@@ -8,7 +8,7 @@
 
 # check if running as root #
 if [ "$EUID" == 0 ]
-  then echo "DO NOT RUN THIS WITH ROOT UNLESS YOU ABSOLUTELY NEED TO!!"
+  then echo "DO NOT RUN THIS WITH ROOT UNLESS YOU ABSOLUTELY NEED TO!! "
 echo
 
 # prompt for continuing anyway #
@@ -24,7 +24,7 @@ echo
 
 # prompt pacman update #
 
-read -p "update pacman packages? Y or N (case insensitive)" -n 1 -r
+read -p "update pacman packages? Y or N (case insensitive) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
@@ -37,7 +37,7 @@ fi
 
 # prompt update yay packages #
 
-read -p "update yay packages? Y or N (case insensitive)" -n 1 -r
+read -p "update yay packages? Y or N (case insensitive) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then echo "skipping yay -Syu"
@@ -53,17 +53,27 @@ if [ "$EUID" == 0 ] # check if root #
 then
 echo "skipping flatpak update due to script being ran as root" # stop the script from updating flatpak packages as root #
 echo
-exit
 else
-read -p "update flatpak packages? Y or N (case insensitive)" -n 1 -r
+
+read -p "update flatpak packages? Y or N (case insensitive) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then echo "skipping command flatpak update"
 echo
-exit
+
 else
 flatpak update
 echo
+fi
+fi
+
+read -p "reboot? Y or N (case insensitive) " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then echo "not rebooting"
+echo
 exit
+else
+reboot
 fi
-fi
+
