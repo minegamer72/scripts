@@ -12,7 +12,7 @@ if [ "$EUID" == 0 ]; then
   echo
 
   # Prompt for continuing anyway
-  read -p "CONTINUE ANYWAY? (Y/N) " -n 1 -r
+  read -p "CONTINUE ANYWAY? (Y/N): " -n 1 -r
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo
     exit
@@ -21,7 +21,7 @@ fi
 echo
 
 # Prompt for updating pacman packages
-read -p "Update pacman packages? (Y/N) " -n 1 -r
+read -p "Update pacman packages? (Y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   echo "Skipping pacman -Syu"
@@ -32,7 +32,7 @@ else
 fi
 
 # Prompt for updating yay packages
-read -p "Update yay packages? (Y/N) " -n 1 -r
+read -p "Update yay packages? (Y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   echo "Skipping yay -Syu"
@@ -47,7 +47,7 @@ if [ "$EUID" == 0 ]; then
   echo "Skipping flatpak update due to script being ran as root"
   echo
 else
-  read -p "Update flatpak packages? (Y/N) " -n 1 -r
+  read -p "Update flatpak packages? (Y/N): " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Skipping command flatpak update"
@@ -59,7 +59,7 @@ else
 fi
 
 # Prompt for rebooting
-read -p "Reboot? (Y/N) " -n 1 -r
+read -p "Reboot? (Y/N): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   echo "Not rebooting"
