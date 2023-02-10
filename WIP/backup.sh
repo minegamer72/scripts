@@ -44,12 +44,8 @@ echo ""
 # Create configuration file
 echo "Attempting to create directory ~/.config/filebackup/"
 mkdir ~/.config/filebackup/
-cd filebackup/
-echo "Attempting to create file ~/.config/filebackup/configuration"
 touch configuration
 
-
-echo "Attempting to write to file ~/.config/filebackup/configuration"
 # Write to configuration file
 
 echo "tarballdir=$tarballdir" > "$config"
@@ -68,12 +64,8 @@ exit
 else
 
 # Create configuration file
-echo "Attempting to create directory ~/.config/filebackup"
 mkdir ~/.config/filebackup/
-echo "Attempting to create file ~/.config/filebackup/configuration"
 touch configuration
-
-echo "Attempting to write to file ~/.config/filebackup/configuration"
 
 # Write to configuration file
 port=${port:-22}
@@ -83,7 +75,6 @@ password=${password:-abc123}
 remote_dir=${remote_dir:-/home/foo/poo}
 protocol=${protocol:-scp}
 
-echo "$tarballdir"
 echo "tarballdir=$tarballdir" > "$config"
 echo "dirs=('${dirs[0]}')" >> "$config"
 echo "server=$server" >> "$config"
@@ -105,15 +96,16 @@ fi
 else
 source "$config"
 
-# Check if the current date is even
+# Check if the current date is even or if the -F flag was used
 if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
 
   read -p "Proceed with File Backup (may take a few minutes) [Y/N] : " answer
 
   if [ "$answer" == "Y" ] || [ "$answer" == "y" ]; then
-    # Start to back up files
+    # If user typed Y, then continue
     echo "Proceeding..."
 
+    # If the $tarballdir is empty or incorrect, create a new directory for it.
     if [ ! -d "$tarballdir" ]; then
       mkdir "$tarballdir"
     fi
@@ -125,6 +117,7 @@ if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
       echo "Compressing directory ${dir}."
     done
 
+    # If the user has $remotelocation set to true in their configuration file, proceed to send tars to the server inputted in their configuration file
     if [ "$remotelocation" == true ]; then
       echo "Attempting to send to remote server"
       echo ""
@@ -136,11 +129,12 @@ if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
       else
         # If the protocol is valid, then continue
         for file in "${dirs[@]}"; do
-          # Send the tar archive to the remote directory
+          # If user has "scp" as $protocol, use scp
           if [ "$protocol" == "scp" ]; then
             scp "$tarballdir/${dir//\//_}.tar.gz" "$remote_dir"
             rm -r $tarballdir/*.tar.gz
           elif [ "$protocol" == "rsync" ]; then
+            # or if they put rsync
             rsync -avz "$tarballdir/${dir//\//_}.tar.gz" "$remote_dir"
             rm -r $tarballdir/*.tar.gz
             # probably going to remove this else statement later because it's unneeded
@@ -161,5 +155,7 @@ if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
 fi
 fi
 else
+# If the user runs the script as root, it will skip everything and echo this.
 echo "Don't run this as root!"
+exit
 fi
