@@ -2,8 +2,6 @@
 # This script automatically puts directories into a tarball and has the option of sending them to a remote server using scp
 # scp should have password support, but an RSA key is highly reccomended (not only because it's seamless, it's more secure than a password!)
 
-
-
 # Check if not running as root
 if [ "$UID" -ne 0 ]; then
 # Config file, points to where it should be.
@@ -25,6 +23,10 @@ read -p "Directories to back up: " dirs
 echo ""
 read -p "Directory to store tarballs (if sending to remote server, this is temporary): " tarballdir
 echo ""
+read -p "Enable Logging? (true/false) " logging
+echo ""
+read -p "Directory to put logs (default is the same directory the script is in)" logdir
+echo ""
 read -p "Are these tarballs going to a remote server? (true/false): " remotelocation
 # If the user answered true to $remotelocation
 if [ "$remotelocation" == true ]; then
@@ -35,11 +37,7 @@ read -p "Enter server port (default 22): " port
 echo ""
 read -p "Enter remote username: " username
 echo ""
-#read -s -p "Enter remote password (not echoed): " password
-#echo ""
 read -p "Enter remote directory: " remote_dir
-echo ""
-#read -p "Enter protocol to use (scp or rsync)" protocol
 echo ""
 # Create configuration file
 echo "Attempting to create directory ~/.config/filebackup/"
@@ -53,10 +51,10 @@ echo "dirs=('${dirs[0]}')" >> "$config"
 echo "server=$server" >> "$config"
 echo "port=$port" >> "$config"
 echo "username=$username" >> "$config"
-#echo "password=$password" >> "$config"
 echo "dirs=(${dirs[@]})" >> "$config"
 echo "remote_dir=$remote_dir" >> "$config"
-#echo "protocol=$protocol" >> "$config"
+echo "logging=$logging" >> "$config"
+echo "logdir=$logdir" >> "$config"
 echo "remotelocation=$remotelocation" >> "$config"
 echo "Created configuration file: $config"
 echo "Run the script again to back up files."
@@ -73,18 +71,18 @@ server=${server:-0.0.0.0}
 username=${username:-foo}
 #password=${password:-abc123}
 remote_dir=${remote_dir:-/home/foo/poo}
-#protocol=${protocol:-scp}
+logdir=${logdir:-./}
 
 echo "tarballdir=$tarballdir" > "$config"
 echo "dirs=('${dirs[0]}')" >> "$config"
 echo "server=$server" >> "$config"
 echo "port=$port" >> "$config"
 echo "username=$username" >> "$config"
-#echo "password=$password" >> "$config"
 echo "dirs=(${dirs[@]})" >> "$config"
 echo "remote_dir=$remote_dir" >> "$config"
-#echo "protocol=$protocol" >> "$config"
 echo "remotelocation=$remotelocation" >> "$config"
+echo "logging=$logging" >> "$config"
+echo "logdir=$logdir" >> "$config"
 echo "Created configuration file: $config"
 echo "Run the script again to back up files."
 exit
@@ -95,12 +93,13 @@ exit
 fi
 else
 source "$config"
-
+time=$(date "+%I-%M-%p")
+if [ "$logging" == true ]; then
+exec &> >(tee -a $logdir/$mmddyydate-$user.log) 2>&1
+fi
 # Check if the current date is even or if the -F flag was used
-if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
     # Variables for later use
     dira=${#dirs[@]}
-    sent=0
     user=$(whoami)
   read -p "Proceed with File Backup (may take a few minutes) [Y/N] : " answer
 
@@ -119,15 +118,16 @@ if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
     if [ "$remotelocation" == true ]; then
       echo "Attempting to send to remote server"
       echo "Sending $dira directory(ies)"
-      sudo tar -czf "$mmddyydate-$user.tar.gz" "${dirs[@]}"
-      scp -P "$port" "$mmddyydate-$user.tar.gz" "$username@$server:$remote_dir"
-      sudo rm "$mmddyydate-$user.tar.gz"
+      sudo tar -czf "$mmddyydate-$time-$user.tar.gz" "${dirs[@]}"
+      scp -P "$port" "$mmddyydate-$time-$user.tar.gz" "$username@$server:$remote_dir"
+      # cleanup
+      sudo rm "$mmddyydate-$time-$user.tar.gz"
       exit
        # done
       else
     for dir in "${dirs[@]}"; do
-      sudo tar -czf "$tarballdir/$mmddyydate-$user.tar.gz"
-      echo "Compressing directory ${dir}."
+#      echo "Compressing directory ${dir}."
+      sudo tar -czf "$tarballdir/$mmddyydate-$time.tar.gz"
     done
       exit
     fi
@@ -137,6 +137,8 @@ if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
     exit
   fi
 fi
+
+
 fi
 else
 # If the user runs the script as root, it will skip everything and echo this.
