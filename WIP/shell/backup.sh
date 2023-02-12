@@ -2,6 +2,8 @@
 # This script automatically puts directories into a tarball and has the option of sending them to a remote server using scp
 # scp should have password support, but an RSA key is highly reccomended (not only because it's seamless, it's more secure than a password!)
 
+
+
 # Check if not running as root
 if [ "$UID" -ne 0 ]; then
 # Config file, points to where it should be.
@@ -10,6 +12,9 @@ config=~/.config/filebackup/configuration
 # Get the current date
 current_date=$(date +%-d )
 mmddyydate=$(date +%m-%d-%y)
+
+#Get the username
+user=$(whoami)
 
 # Check Configuration
 if [ ! -f "$config" ]; then
@@ -95,12 +100,12 @@ else
 source "$config"
 time=$(date "+%I-%M-%p")
 if [ "$logging" == true ]; then
-exec &> >(tee -a $logdir/$mmddyydate-$user.log) 2>&1
+exec &> >(tee -a $logdir/$mmddyydate-$time-$user.log) 2>&1
 fi
 # Check if the current date is even or if the -F flag was used
     # Variables for later use
     dira=${#dirs[@]}
-    user=$(whoami)
+
   read -p "Proceed with File Backup (may take a few minutes) [Y/N] : " answer
 
   if [ "$answer" == "Y" ] || [ "$answer" == "y" ]; then
