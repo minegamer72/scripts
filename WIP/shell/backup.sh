@@ -1,17 +1,17 @@
 #!/bin/bash
-# This shell script isn't formatted correctly and a part of it hasn't been tested.
-# This script automatically puts directories into a tarball and has the option of sending them to a remote server using scp or rsync.
-# Untested: Sending files over scp or rsync, I should have it tested by the end of this weekend.
+# This script automatically puts directories into a tarball and has the option of sending them to a remote server using scp
+# scp should have password support, but an RSA key is highly reccomended (not only because it's seamless, it's more secure than a password!)
 
+
+
+# Check if not running as root
+if [ "$UID" -ne 0 ]; then
 # Config file, points to where it should be.
-
 config=~/.config/filebackup/configuration
 
 # Get the current date
 current_date=$(date +%-d )
-
-# Check if not running as root
-if [ "$UID" -ne 0 ]; then
+mmddyydate=$(date +%m-%d-%y)
 
 # Check Configuration
 if [ ! -f "$config" ]; then
@@ -35,11 +35,11 @@ read -p "Enter server port (default 22): " port
 echo ""
 read -p "Enter remote username: " username
 echo ""
-read -s -p "Enter remote password (not echoed): " password
-echo ""
+#read -s -p "Enter remote password (not echoed): " password
+#echo ""
 read -p "Enter remote directory: " remote_dir
 echo ""
-read -p "Enter protocol to use (scp or rsync)" protocol
+#read -p "Enter protocol to use (scp or rsync)" protocol
 echo ""
 # Create configuration file
 echo "Attempting to create directory ~/.config/filebackup/"
@@ -53,10 +53,10 @@ echo "dirs=('${dirs[0]}')" >> "$config"
 echo "server=$server" >> "$config"
 echo "port=$port" >> "$config"
 echo "username=$username" >> "$config"
-echo "password=$password" >> "$config"
+#echo "password=$password" >> "$config"
 echo "dirs=(${dirs[@]})" >> "$config"
 echo "remote_dir=$remote_dir" >> "$config"
-echo "protocol=$protocol" >> "$config"
+#echo "protocol=$protocol" >> "$config"
 echo "remotelocation=$remotelocation" >> "$config"
 echo "Created configuration file: $config"
 echo "Run the script again to back up files."
@@ -71,19 +71,19 @@ touch configuration
 port=${port:-22}
 server=${server:-0.0.0.0}
 username=${username:-foo}
-password=${password:-abc123}
+#password=${password:-abc123}
 remote_dir=${remote_dir:-/home/foo/poo}
-protocol=${protocol:-scp}
+#protocol=${protocol:-scp}
 
 echo "tarballdir=$tarballdir" > "$config"
 echo "dirs=('${dirs[0]}')" >> "$config"
 echo "server=$server" >> "$config"
 echo "port=$port" >> "$config"
 echo "username=$username" >> "$config"
-echo "password=$password" >> "$config"
+#echo "password=$password" >> "$config"
 echo "dirs=(${dirs[@]})" >> "$config"
 echo "remote_dir=$remote_dir" >> "$config"
-echo "protocol=$protocol" >> "$config"
+#echo "protocol=$protocol" >> "$config"
 echo "remotelocation=$remotelocation" >> "$config"
 echo "Created configuration file: $config"
 echo "Run the script again to back up files."
@@ -98,7 +98,10 @@ source "$config"
 
 # Check if the current date is even or if the -F flag was used
 if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
-
+    # Variables for later use
+    dira=${#dirs[@]}
+    sent=0
+    user=$(whoami)
   read -p "Proceed with File Backup (may take a few minutes) [Y/N] : " answer
 
   if [ "$answer" == "Y" ] || [ "$answer" == "y" ]; then
@@ -111,40 +114,21 @@ if [ $((current_date % 2)) -ne 0 ] || [ "$1" == "-F" ]; then
     fi
 
     # Create a tarball of all mentioned directories in dirs
-    
-    for dir in "${dirs[@]}"; do
-      sudo tar -czf "$tarballdir/${dir//\//_}.tar.gz" "$dir"
-      echo "Compressing directory ${dir}."
-    done
 
     # If the user has $remotelocation set to true in their configuration file, proceed to send tars to the server inputted in their configuration file
     if [ "$remotelocation" == true ]; then
       echo "Attempting to send to remote server"
-      echo ""
-
-      # Check if the protocol is valid
-      if [ "$protocol" != "scp" ] && [ "$protocol" != "rsync" ]; then
-        echo "Error: Invalid protocol in configuration, use either scp or rsync!"
-        exit
+      echo "Sending $dira directory(ies)"
+      sudo tar -czf "$mmddyydate-$user.tar.gz" "${dirs[@]}"
+      scp -P "$port" "$mmddyydate-$user.tar.gz" "$username@$server:$remote_dir"
+      sudo rm "$mmddyydate-$user.tar.gz"
+      exit
+       # done
       else
-        # If the protocol is valid, then continue
-        for file in "${dirs[@]}"; do
-          # If user has "scp" as $protocol, use scp
-          if [ "$protocol" == "scp" ]; then
-            scp "$tarballdir/${dir//\//_}.tar.gz" "$remote_dir"
-            rm -r $tarballdir/*.tar.gz
-          elif [ "$protocol" == "rsync" ]; then
-            # or if they put rsync
-            rsync -avz "$tarballdir/${dir//\//_}.tar.gz" "$remote_dir"
-            rm -r $tarballdir/*.tar.gz
-            # probably going to remove this else statement later because it's unneeded
-            else
-            echo "Error: Invalid protocol in configuration, use either scp or rsync! 1"
-            exit
-          fi
-        done
-      fi
-      else
+    for dir in "${dirs[@]}"; do
+      sudo tar -czf "$tarballdir/$mmddyydate-$user.tar.gz"
+      echo "Compressing directory ${dir}."
+    done
       exit
     fi
   else
