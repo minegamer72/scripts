@@ -61,6 +61,8 @@ echo "remote_dir=$remote_dir" >> "$config"
 echo "logging=$logging" >> "$config"
 echo "logdir=$logdir" >> "$config"
 echo "remotelocation=$remotelocation" >> "$config"
+echo "# Command to be use for elevated permissions, sudo by default." >> "$config"
+echo 'rootcmd="sudo"' >> "$config"
 echo "Created configuration file: $config"
 echo "Run the script again to back up files."
 exit
@@ -88,6 +90,8 @@ echo "remote_dir=$remote_dir" >> "$config"
 echo "remotelocation=$remotelocation" >> "$config"
 echo "logging=$logging" >> "$config"
 echo "logdir=$logdir" >> "$config"
+echo "# Command to be use for elevated permissions, sudo by default." >> "$config"
+echo 'rootcmd="sudo"' >> "$config"
 echo "Created configuration file: $config"
 echo "Run the script again to back up files."
 exit
@@ -123,16 +127,16 @@ fi
     if [ "$remotelocation" == true ]; then
       echo "Attempting to send to remote server"
       echo "Sending $dira directory(ies)"
-      sudo tar -czf "$mmddyydate-$time-$user.tar.gz" "${dirs[@]}"
+      $rootcmd tar -czf "$mmddyydate-$time-$user.tar.gz" "${dirs[@]}"
       scp -P "$port" "$mmddyydate-$time-$user.tar.gz" "$username@$server:$remote_dir"
       # cleanup
-      sudo rm "$mmddyydate-$time-$user.tar.gz"
+      $rootcmd rm "$mmddyydate-$time-$user.tar.gz"
       exit
        # done
       else
     for dir in "${dirs[@]}"; do
 #      echo "Compressing directory ${dir}."
-      sudo tar -czf "$tarballdir/$mmddyydate-$time.tar.gz"
+      $rootcmd tar -czf "$tarballdir/$mmddyydate-$time.tar.gz"
     done
       exit
     fi
