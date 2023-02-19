@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script automatically puts directories into a tarball and has the option of sending them to a remote server using scp
-# scp should have password support, but an RSA key is highly reccomended (not only because it's seamless, it's more secure than a password!)
+# scp should have password support, but an RSA key is highly reccomended (not only because it's seamless, it can be more secure than a password!)
 
 
 
